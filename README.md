@@ -1,7 +1,7 @@
 # HabotConnect — LSA Service Booking API
 
-**Candidate:** Vansh Mehta
-**Email:** mehtavansh6626@gmail.com
+**Candidate:** Anjali Solanki
+**Email:** anjalisolanki0104@gmail.com
 **Position:** Python Backend Developer — Hiring Project
 **Submission date:** August 2026
 
