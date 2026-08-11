@@ -1,0 +1,638 @@
+{% comment %}
+Demo console for the HabotConnect LSA Service Booking API.
+
+A thin client over the real API: every button issues an ordinary fetch() to the
+same endpoints an external consumer would call. The request and response for
+each action are shown verbatim, so the audience can see the API working rather
+than take it on trust.
+
+Author: Vansh Mehta <mehtavansh6626@gmail.com>
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HabotConnect — LSA Booking Console</title>
+<style>
+  :root {
+    --ink: #16233F;
+    --ink-soft: #22345C;
+    --teal: #0E7C7B;
+    --mint: #17BEBB;
+    --coral: #E4572E;
+    --amber: #C88A0C;
+    --page: #F4F7F9;
+    --card: #FFFFFF;
+    --border: #DCE5EB;
+    --text: #1B2A44;
+    --muted: #64788F;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--page);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+
+  /* ---------- header ---------- */
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 26px 32px 22px;
+  }
+  header .wrap { max-width: 1220px; margin: 0 auto; }
+  header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+  header p { margin: 0; color: #A9BCD4; font-size: 14px; }
+  header .links { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+  header .links a {
+    color: var(--mint); text-decoration: none; font-size: 13px; font-weight: 600;
+    border: 1px solid #33507F; border-radius: 6px; padding: 5px 12px;
+  }
+  header .links a:hover { background: var(--ink-soft); }
+
+  /* ---------- layout ---------- */
+  main { max-width: 1220px; margin: 0 auto; padding: 26px 32px 70px; }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 940px) { .steps { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px 22px;
+    margin-bottom: 22px;
+  }
+  .card h2 {
+    margin: 0 0 3px; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card .sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--teal); color: #fff; font-size: 12px; font-weight: 700;
+    flex: none;
+  }
+
+  /* ---------- forms ---------- */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  input, select {
+    font: inherit; font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; color: var(--text);
+    width: 100%;
+  }
+  input:focus, select:focus { outline: 2px solid var(--mint); outline-offset: -1px; border-color: var(--mint); }
+
+  button {
+    font: inherit; font-size: 14px; font-weight: 600;
+    padding: 9px 18px; border-radius: 6px; border: 0;
+    background: var(--teal); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #0a6362; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost { background: #fff; color: var(--teal); border: 1px solid var(--teal); }
+  button.ghost:hover { background: #EAF5F5; }
+  button.danger { background: var(--coral); }
+  button.danger:hover { background: #c9451f; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; align-items: center; }
+
+  /* ---------- results ---------- */
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+  .hint strong { color: var(--text); }
+
+  .lsa {
+    display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    padding: 11px 13px; border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px; background: #fff; cursor: pointer;
+  }
+  .lsa:hover { border-color: var(--mint); background: #F7FCFC; }
+  .lsa.selected { border-color: var(--teal); background: #EAF5F5; box-shadow: inset 0 0 0 1px var(--teal); }
+  .lsa .name { font-weight: 600; font-size: 14px; }
+  .lsa .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .lsa .rate { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .lsa .rate small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); text-align: right; }
+  .chips { margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap; }
+  .chip {
+    font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+    background: #EAF5F5; color: var(--teal);
+  }
+
+  .result { margin-top: 16px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); display: none; }
+  .result.show { display: block; }
+  .result .bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 13px; font-size: 13px; font-weight: 600;
+  }
+  .result.ok  .bar { background: #E7F5EE; color: #146B45; }
+  .result.err .bar { background: #FDECE6; color: #A83415; }
+  .result.warn .bar { background: #FDF4E3; color: #8A5D06; }
+  .status {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    background: rgba(0,0,0,0.08);
+  }
+  pre {
+    margin: 0; padding: 13px; background: var(--ink); color: #D9E4F2;
+    font-size: 12px; line-height: 1.5; overflow-x: auto; max-height: 300px;
+  }
+  pre .k { color: var(--mint); }
+  pre .s { color: #F0C674; }
+  pre .n { color: #E9A08C; }
+
+  .empty { color: var(--muted); font-size: 13.5px; padding: 14px 0; }
+  .booking-ref {
+    display: inline-block; font-family: ui-monospace, Consolas, monospace;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    background: #EAF5F5; padding: 3px 10px; border-radius: 5px;
+  }
+  .callout {
+    border-left: 3px solid var(--amber); background: #FDF9F0;
+    padding: 11px 14px; border-radius: 0 6px 6px 0; font-size: 13px; margin-top: 14px;
+  }
+  .callout b { color: #7A5205; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 32px 40px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>HabotConnect — Learning Support Assistant Booking</h1>
+    <p>Demo console for the backend API. Every button below calls the real endpoints and shows you the response.</p>
+    <div class="links">
+      <a href="/api/docs/">API documentation (Swagger)</a>
+      <a href="/api/redoc/">ReDoc</a>
+      <a href="/admin/">Django admin</a>
+      <a href="/health/">Health check</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ STEP 1 : SEARCH ============ -->
+  <div class="card">
+    <h2><span class="num">1</span> Find an assistant</h2>
+    <p class="sub">
+      Calls <code>GET /api/v1/lsas/search/</code>. Only verified assistants who are accepting
+      bookings appear. This is the endpoint whose N+1 query problem was resolved — it costs the
+      same 3 database queries whether it returns 5 results or 500.
+    </p>
+
+    <div class="grid three">
+      <div class="field">
+        <label for="f-skill">Skill needed</label>
+        <select id="f-skill">
+          <option value="">Any skill</option>
+          {% for skill in skills %}
+            <option value="{{ skill.slug }}">{{ skill.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-city">City</label>
+        <select id="f-city">
+          <option value="">Anywhere</option>
+          <option>Bengaluru</option><option>Mumbai</option><option>Delhi</option>
+          <option>Hyderabad</option><option>Chennai</option><option>Pune</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-rate">Maximum hourly rate</label>
+        <input type="number" id="f-rate" placeholder="e.g. 1200" min="0" step="50">
+      </div>
+      <div class="field">
+        <label for="f-exp">Minimum years of experience</label>
+        <input type="number" id="f-exp" placeholder="e.g. 5" min="0">
+      </div>
+      <div class="field">
+        <label for="f-rating">Minimum rating</label>
+        <input type="number" id="f-rating" placeholder="e.g. 4.5" min="0" max="5" step="0.1">
+      </div>
+      <div class="field">
+        <label for="f-free">Free during the session below</label>
+        <select id="f-free">
+          <option value="">Don't check availability</option>
+          <option value="1">Only show assistants who are free</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btn-search">Search assistants</button>
+      <button class="ghost" id="btn-clear">Clear filters</button>
+      <span class="hint" id="search-count">{{ lsa_count }} bookable assistant{{ lsa_count|pluralize }} in the database</span>
+    </div>
+
+    <div id="lsa-list" style="margin-top:16px"></div>
+    <div class="result" id="r-search"><div class="bar"></div><pre></pre></div>
+  </div>
+
+  <div class="steps">
+
+    <!-- ============ STEP 2 : BOOK ============ -->
+    <div>
+      <div class="card">
+        <h2><span class="num">2</span> Book a session</h2>
+        <p class="sub">
+          Calls <code>POST /api/v1/bookings/</code>. The price is calculated on the server from
+          the assistant's hourly rate — a client cannot set it.
+        </p>
+
+        <div class="grid">
+          <div class="field full">
+            <label for="f-parent">Parent</label>
+            <select id="f-parent">
+              {% for parent in parents %}
+                <option value="{{ parent.id }}">{{ parent.full_name }} — {{ parent.email }}</option>
+              {% empty %}
+                <option value="">No parents yet — run: python manage.py seed_data</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field full">
+            <label>Selected assistant</label>
+            <input type="text" id="f-lsa-name" readonly placeholder="Pick one from the list above">
+            <input type="hidden" id="f-lsa-id">
+          </div>
+          <div class="field">
+            <label for="f-date">Date</label>
+            <input type="date" id="f-date">
+          </div>
+          <div class="field">
+            <label for="f-time">Start time</label>
+            <input type="time" id="f-time" value="10:00" step="900">
+          </div>
+          <div class="field">
+            <label for="f-duration">Duration</label>
+            <select id="f-duration">
+              <option value="60">1 hour</option>
+              <option value="90">1 hour 30 minutes</option>
+              <option value="120">2 hours</option>
+              <option value="30">30 minutes</option>
+              <option value="15">15 minutes (too short — will be rejected)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-mode">Session mode</label>
+            <select id="f-mode">
+              <option value="ONLINE">Online</option>
+              <option value="IN_PERSON">In person</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btn-book">Create booking</button>
+          <button class="danger" id="btn-book-again" disabled>Try booking the same slot again</button>
+        </div>
+
+        <div class="callout">
+          <b>Try this:</b> create a booking, then press
+          <i>Try booking the same slot again</i>. The second request is refused with
+          <code>409 Conflict</code> and tells you which booking is in the way. Then shift the start
+          time forward by exactly the session length — that one succeeds, because back-to-back
+          sessions are not a clash.
+        </div>
+
+        <div class="result" id="r-book"><div class="bar"></div><pre></pre></div>
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 : PAYMENT ============ -->
+    <div>
+      <div class="card">
+        <h2><span class="num">3</span> Simulate the payment</h2>
+        <p class="sub">
+          A new booking sits at <b>PENDING_PAYMENT</b>. In production the payment gateway sends a
+          signed webhook to <code>POST /api/v1/payments/webhook/</code>. These buttons sign a real
+          event server-side and replay it through that endpoint.
+        </p>
+
+        <div class="field full">
+          <label for="f-ref">Booking reference</label>
+          <input type="text" id="f-ref" placeholder="Create a booking first, or paste e.g. HB-7F3A9C2D">
+        </div>
+
+        <div class="actions">
+          <button id="btn-paid">Payment succeeded</button>
+          <button class="danger" id="btn-failed">Payment failed</button>
+          <button class="ghost" id="btn-replay" disabled>Send the same event twice</button>
+        </div>
+
+        <div class="callout">
+          <b>Try this:</b> mark a payment succeeded, then press <i>Send the same event twice</i>.
+          The second delivery returns <code>duplicate</code> and changes nothing — payment gateways
+          resend events, and a replay must never charge or confirm twice.
+        </div>
+
+        <div class="result" id="r-pay"><div class="bar"></div><pre></pre></div>
+      </div>
+
+      <!-- ============ STEP 4 : BOOKINGS ============ -->
+      <div class="card">
+        <h2><span class="num">4</span> All bookings</h2>
+        <p class="sub">Calls <code>GET /api/v1/bookings/</code>.</p>
+        <div class="actions" style="margin-top:0">
+          <button class="ghost" id="btn-list">Refresh list</button>
+          <select id="f-status" style="width:auto">
+            <option value="">Every status</option>
+            <option value="PENDING_PAYMENT">Pending payment</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="FAILED">Failed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+        <div id="booking-list" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  Vansh Mehta &nbsp;·&nbsp; mehtavansh6626@gmail.com &nbsp;·&nbsp;
+  HabotConnect Python Backend Developer hiring project
+</footer>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+let selectedLSA = null;
+let lastBooking = null;
+let lastEventPayload = null;
+
+/* ---------- helpers ---------- */
+
+function highlight(obj) {
+  const json = JSON.stringify(obj, null, 2);
+  return json
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>')
+    .replace(/: (\d+\.?\d*)/g, ': <span class="n">$1</span>');
+}
+
+function show(panelId, tone, label, statusCode, payload) {
+  const panel = $(panelId);
+  panel.className = "result show " + tone;
+  panel.querySelector(".bar").innerHTML =
+    `<span class="status">${statusCode}</span><span>${label}</span>`;
+  panel.querySelector("pre").innerHTML = highlight(payload);
+}
+
+function toneFor(status) {
+  if (status >= 200 && status < 300) return "ok";
+  if (status === 409 || status === 202) return "warn";
+  return "err";
+}
+
+/** Turn an API error envelope into a sentence a human can act on. */
+function describeError(status, body) {
+  const err = body && body.error;
+  if (!err) return "Request failed";
+  if (status === 409) return err.message;
+  if (status === 400 && err.details) {
+    const parts = [];
+    for (const [field, msgs] of Object.entries(err.details)) {
+      const text = Array.isArray(msgs) ? msgs.join(" ") : String(msgs);
+      parts.push(`${field.replace(/_/g, " ")}: ${text}`);
+    }
+    return parts.join("  ·  ");
+  }
+  return err.message || "Request failed";
+}
+
+async function call(url, options) {
+  const response = await fetch(url, options);
+  let body;
+  try { body = await response.json(); } catch { body = { raw: await response.text() }; }
+  return { status: response.status, body };
+}
+
+function sessionWindow() {
+  const date = $("f-date").value;
+  const time = $("f-time").value;
+  if (!date || !time) return null;
+  const start = new Date(`${date}T${time}`);
+  const end = new Date(start.getTime() + parseInt($("f-duration").value, 10) * 60000);
+  return { start, end };
+}
+
+/* ---------- step 1 : search ---------- */
+
+async function search() {
+  const params = new URLSearchParams();
+  if ($("f-skill").value)  params.set("skills", $("f-skill").value);
+  if ($("f-city").value)   params.set("city", $("f-city").value);
+  if ($("f-rate").value)   params.set("max_hourly_rate", $("f-rate").value);
+  if ($("f-exp").value)    params.set("min_experience", $("f-exp").value);
+  if ($("f-rating").value) params.set("min_rating", $("f-rating").value);
+
+  if ($("f-free").value) {
+    const w = sessionWindow();
+    if (w) {
+      params.set("available_from", w.start.toISOString());
+      params.set("available_to", w.end.toISOString());
+    }
+  }
+
+  const url = "/api/v1/lsas/search/?" + params.toString();
+  $("btn-search").disabled = true;
+  const { status, body } = await call(url);
+  $("btn-search").disabled = false;
+
+  renderLSAs(body.results || []);
+  $("search-count").textContent =
+    `${body.count} assistant${body.count === 1 ? "" : "s"} matched`;
+  show("r-search", toneFor(status),
+       `GET ${url}`, status, body);
+}
+
+function renderLSAs(list) {
+  const box = $("lsa-list");
+  if (!list.length) {
+    box.innerHTML = '<div class="empty">No assistants match those filters. Try widening them.</div>';
+    return;
+  }
+  box.innerHTML = list.map((l) => `
+    <div class="lsa" data-id="${l.id}" data-name="${l.full_name}" data-rate="${l.hourly_rate}">
+      <div>
+        <div class="name">${l.full_name}</div>
+        <div class="meta">${l.city || "Location not set"} · ${l.years_of_experience} years' experience · rated ${l.rating} / 5</div>
+        <div class="chips">${(l.skills || []).map((s) => `<span class="chip">${s.name}</span>`).join("")}</div>
+      </div>
+      <div class="rate">₹${l.hourly_rate}<small>per hour</small></div>
+    </div>`).join("");
+
+  box.querySelectorAll(".lsa").forEach((el) => {
+    el.addEventListener("click", () => {
+      box.querySelectorAll(".lsa").forEach((n) => n.classList.remove("selected"));
+      el.classList.add("selected");
+      selectedLSA = { id: el.dataset.id, name: el.dataset.name, rate: el.dataset.rate };
+      $("f-lsa-id").value = selectedLSA.id;
+      $("f-lsa-name").value = `${selectedLSA.name}  —  ₹${selectedLSA.rate}/hour`;
+    });
+  });
+}
+
+/* ---------- step 2 : book ---------- */
+
+async function book() {
+  if (!$("f-lsa-id").value) {
+    show("r-book", "err", "Pick an assistant from the list above first", "—",
+         { hint: "Search in step 1, then click a result to select them." });
+    return;
+  }
+  if (!$("f-parent").value) {
+    show("r-book", "err", "No parent selected", "—",
+         { hint: "Run 'python manage.py seed_data' to create demo parents." });
+    return;
+  }
+  const w = sessionWindow();
+  if (!w) {
+    show("r-book", "err", "Choose a date and a start time", "—", { hint: "Both are required." });
+    return;
+  }
+
+  const payload = {
+    parent_id: $("f-parent").value,
+    lsa_id: $("f-lsa-id").value,
+    scheduled_start: w.start.toISOString(),
+    scheduled_end: w.end.toISOString(),
+    session_mode: $("f-mode").value,
+    notes: "Created from the demo console.",
+  };
+
+  $("btn-book").disabled = true;
+  const { status, body } = await call("/api/v1/bookings/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  $("btn-book").disabled = false;
+
+  if (status === 201) {
+    lastBooking = body;
+    $("f-ref").value = body.reference;
+    $("btn-book-again").disabled = false;
+    show("r-book", "ok",
+      `Booked ${body.reference} — ${body.duration_minutes} minutes, ₹${body.total_amount}, status ${body.status}`,
+      status, body);
+  } else {
+    show("r-book", toneFor(status), describeError(status, body), status, body);
+  }
+  listBookings();
+}
+
+/* ---------- step 3 : payment ---------- */
+
+async function pay(outcome) {
+  const reference = $("f-ref").value.trim();
+  if (!reference) {
+    show("r-pay", "err", "Enter a booking reference", "—",
+         { hint: "Create a booking in step 2 first." });
+    return;
+  }
+  lastEventPayload = { booking_reference: reference, outcome };
+  await sendPayment(lastEventPayload);
+  $("btn-replay").disabled = false;
+}
+
+async function sendPayment(payload) {
+  const { status, body } = await call("/demo/simulate-payment/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  // Remember the event id so "send twice" replays this exact event rather
+  // than generating a fresh one, which would not be a duplicate.
+  if (body && body.sent_event && lastEventPayload) {
+    lastEventPayload.event_id = body.sent_event.id;
+  }
+
+  if (status === 200) {
+    const w = body.webhook_response || {};
+    const duplicate = w.status === "duplicate";
+    show("r-pay", duplicate ? "warn" : "ok",
+      `${w.message || "Processed"} — booking is now ${w.booking_status || "unchanged"}`,
+      `${body.webhook_status} ${duplicate ? "duplicate" : ""}`.trim(), body);
+  } else {
+    show("r-pay", "err", (body && body.error) || "Simulation failed", status, body);
+  }
+  listBookings();
+}
+
+/* ---------- step 4 : bookings ---------- */
+
+async function listBookings() {
+  const status = $("f-status").value;
+  const url = "/api/v1/bookings/" + (status ? `?status=${status}` : "");
+  const res = await call(url);
+  const rows = (res.body && res.body.results) || [];
+
+  const colour = {
+    CONFIRMED: "#146B45", PENDING_PAYMENT: "#8A5D06",
+    FAILED: "#A83415", CANCELLED: "#64788F", COMPLETED: "#0E7C7B",
+  };
+
+  $("booking-list").innerHTML = rows.length
+    ? rows.slice(0, 12).map((b) => `
+        <div class="lsa" style="cursor:default">
+          <div>
+            <div class="name"><span class="booking-ref">${b.reference}</span></div>
+            <div class="meta">
+              ${b.lsa.full_name} &nbsp;·&nbsp; ${new Date(b.scheduled_start).toLocaleString()}
+              &nbsp;·&nbsp; ${b.duration_minutes} min
+            </div>
+          </div>
+          <div class="rate" style="color:${colour[b.status] || "#1B2A44"}">
+            ${b.status.replace(/_/g, " ")}
+            <small>₹${b.total_amount}</small>
+          </div>
+        </div>`).join("")
+      + (rows.length > 12 ? `<div class="hint">Showing 12 of ${res.body.count}.</div>` : "")
+    : '<div class="empty">No bookings yet.</div>';
+}
+
+/* ---------- wiring ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Default the date to a week out so the "must be in the future" rule passes.
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  $("f-date").value = d.toISOString().slice(0, 10);
+  $("f-date").min = new Date().toISOString().slice(0, 10);
+
+  $("btn-search").addEventListener("click", search);
+  $("btn-clear").addEventListener("click", () => {
+    ["f-skill", "f-city", "f-rate", "f-exp", "f-rating", "f-free"].forEach((id) => ($(id).value = ""));
+    search();
+  });
+  $("btn-book").addEventListener("click", book);
+  $("btn-book-again").addEventListener("click", book);
+  $("btn-paid").addEventListener("click", () => pay("succeeded"));
+  $("btn-failed").addEventListener("click", () => pay("failed"));
+  $("btn-replay").addEventListener("click", () => {
+    if (lastEventPayload) sendPayment(lastEventPayload);
+  });
+  $("btn-list").addEventListener("click", listBookings);
+  $("f-status").addEventListener("change", listBookings);
+
+  search();
+  listBookings();
+});
+</script>
+</body>
+</html>

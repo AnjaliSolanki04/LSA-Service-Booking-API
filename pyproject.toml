@@ -1,0 +1,30 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["migrations", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "DJ"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # function call in default argument (common in DRF)
+    "DJ001",  # null=True on CharField is intentional for the idempotency key
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F811", "F401"]  # pytest fixtures shadow imports by design
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.coverage.run]
+source = ["apps"]
+omit = ["*/migrations/*", "*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

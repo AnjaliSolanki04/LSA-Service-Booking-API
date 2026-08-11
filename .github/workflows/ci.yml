@@ -1,0 +1,110 @@
+name: CI
+
+# Runs on every push and every pull request. A red build blocks the merge, so
+# main is always in a state where the test suite passes against PostgreSQL.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff==0.6.9
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint
+        run: ruff check .
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }} / PostgreSQL)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    # A real PostgreSQL instance, not SQLite: the schema relies on database
+    # constraints, and those must be exercised against the production engine.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: habot_test
+          POSTGRES_USER: habot
+          POSTGRES_PASSWORD: habot_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SECRET_KEY: ci-secret-key-not-used-in-production
+      DJANGO_DEBUG: "False"
+      POSTGRES_DB: habot_test
+      POSTGRES_USER: habot
+      POSTGRES_PASSWORD: habot_password
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      PAYMENT_WEBHOOK_SECRET: whsec_ci_secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Verify there are no missing migrations
+        # Fails if a model was changed without generating a migration - the most
+        # common way a Django deploy breaks.
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run Django system checks
+        run: python manage.py check --deploy --fail-level ERROR
+        continue-on-error: true
+
+      - name: Apply migrations
+        run: python manage.py migrate --noinput
+
+      - name: Run test suite with coverage
+        run: |
+          pytest --cov=apps --cov-report=term-missing --cov-report=xml -v
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: ignore
