@@ -3,7 +3,7 @@
 Every filter here resolves to SQL. Nothing is filtered in Python, because a
 Python-side filter forces the database to ship rows it will then discard.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

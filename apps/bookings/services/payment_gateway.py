@@ -9,7 +9,7 @@ codebase never imports ``requests`` directly. That gives three things:
 3. A single seam to mock in tests (the suite stubs HTTP with ``responses``, so
    no test ever touches the network).
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

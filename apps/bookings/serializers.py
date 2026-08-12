@@ -4,7 +4,7 @@ Serializers validate *shape and business rules*; the service layer owns
 concurrency and persistence. Keeping that boundary sharp means validation errors
 come back as a clean 400 field map while genuine conflicts come back as 409.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

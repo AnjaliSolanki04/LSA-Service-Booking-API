@@ -1,6 +1,6 @@
 """Model-level tests: constraints, state machine, derived values.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

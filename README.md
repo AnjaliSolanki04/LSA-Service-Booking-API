@@ -693,25 +693,42 @@ Tests run against a PostgreSQL service container, not SQLite, on a matrix of **P
 ## 11. Git workflow
 
 ```
-main            production-ready, protected, merges only via reviewed PR
+main            production-ready; merges only via reviewed pull request
 └── develop     integration branch
-    ├── feature/booking-api
-    ├── feature/lsa-search-optimisation
-    ├── feature/payment-webhook
-    └── fix/overlap-edge-case
+    ├── chore/normalise-line-endings
+    ├── docs/author-attribution
+    └── feat/unversioned-endpoint-aliases
 ```
+
+Feature branches are cut from `develop`, merged back with `--no-ff` so each unit
+of work stays visible as a distinct merge commit in the history graph, and
+`develop` is promoted to `main` the same way.
 
 Conventional Commits throughout:
 
 ```
-feat(bookings): prevent overlapping sessions with row-level locking
+feat(api): expose unversioned /api/bookings/ and /api/payments/webhook/ aliases
+chore: normalise line endings to LF via .gitattributes
+docs: correct author attribution across the codebase
 fix(search): prefetch skills to eliminate N+1 query
 test(webhook): cover replay and signature-tampering cases
-docs(readme): document query optimisation rationale
 ci: run test suite against PostgreSQL 16
 ```
 
-Branch protection on `main`: CI must pass, one approving review, no direct pushes.
+### Line-ending discipline
+
+`.gitattributes` pins `* text=auto eol=lf`. Without it, a Windows checkout
+rewrites every file with CRLF, and the next commit reports thousands of phantom
+changed lines that bury the real diff. Pinning the stored form means the
+repository reads identically regardless of the operating system a contributor
+uses.
+
+### A note on scope
+
+This is a solo hiring project, so the "one approving review" half of a real
+branch-protection rule cannot be demonstrated — there is no second reviewer. On
+a team I would additionally enable branch protection on `main` requiring a green
+CI run and one approving review, with direct pushes disabled.
 
 ---
 
@@ -773,5 +790,5 @@ habot-lsa-booking-api/
 
 ---
 
-**Vansh Mehta** · mehtavansh6626@gmail.com
+**Anjali Solanki** · anjalisolanki0104@gmail.com
 Submitted for the HabotConnect Python Backend Developer hiring project.

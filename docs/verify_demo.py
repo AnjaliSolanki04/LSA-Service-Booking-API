@@ -6,7 +6,7 @@ Runs against the seeded development database using Django's test client, so it
 needs no running server. Prints the actual query counts for the optimised and
 deliberately de-optimised versions of the search endpoint side by side.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

@@ -1,8 +1,8 @@
 """
 Django settings for the HabotConnect LSA Service Booking API.
 
-Author : Vansh Mehta
-Contact: mehtavansh6626@gmail.com
+Author : Anjali Solanki
+Contact: anjalisolanki0104@gmail.com
 
 Configuration is environment-driven (12-factor). The project runs against
 PostgreSQL when database credentials are supplied and silently falls back to a
@@ -148,7 +148,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "HabotConnect - LSA Service Booking API",
     "DESCRIPTION": (
         "Backend prototype connecting parents with Learning Support Assistants. "
-        "Author: Vansh Mehta <mehtavansh6626@gmail.com>"
+        "Author: Anjali Solanki <anjalisolanki0104@gmail.com>"
     ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,

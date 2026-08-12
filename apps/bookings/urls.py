@@ -1,6 +1,6 @@
 """URL routing for the bookings app (mounted under /api/v1/).
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from django.urls import path

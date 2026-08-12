@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # HabotConnect - LSA Service Booking API
-# Author: Vansh Mehta <mehtavansh6626@gmail.com>
+# Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 # ---------------------------------------------------------------------------
 Django==5.0.9
 djangorestframework==3.15.2

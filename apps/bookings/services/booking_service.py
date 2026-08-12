@@ -4,7 +4,7 @@ Views stay thin: they parse and serialise. Every rule about *when a booking is
 allowed to exist* lives here, so the same guarantee holds whether a booking is
 created by the API, a management command, or a future admin action.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

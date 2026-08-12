@@ -12,7 +12,7 @@ GET  /api/v1/bookings/            List bookings
 GET  /api/v1/bookings/{ref}/      Retrieve one booking
 POST /api/v1/payments/webhook/    Gateway callback (signed, idempotent)
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

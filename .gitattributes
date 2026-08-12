@@ -1,0 +1,13 @@
+# Normalise line endings so the repository always stores LF, regardless of the
+# operating system a contributor works on. Without this, a Windows checkout
+# rewrites every file with CRLF and the next commit shows thousands of phantom
+# changed lines that bury the real diff.
+* text=auto eol=lf
+
+# Explicitly binary - never touch these.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.sqlite3 binary

@@ -4,7 +4,7 @@
 
 Used to demo the API and to eyeball query plans on a non-trivial dataset.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

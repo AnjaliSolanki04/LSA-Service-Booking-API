@@ -3,7 +3,7 @@
 Every HTTP call is stubbed with ``responses`` - the suite never touches the
 network, so CI is deterministic and offline-safe.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

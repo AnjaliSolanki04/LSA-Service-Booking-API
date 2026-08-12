@@ -4,7 +4,7 @@ The gateway is an *at-least-once* delivery system: it will happily send the same
 event twice if our first 200 was slow. Everything here is therefore idempotent -
 processing an event a second time returns the same answer and changes nothing.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

@@ -11,7 +11,7 @@ hold without leaking it. Rather than weaken the webhook's security for a demo,
 this view performs the signing server-side and replays the request through the
 genuine signature-verified endpoint.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

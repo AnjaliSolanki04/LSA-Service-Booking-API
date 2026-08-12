@@ -20,7 +20,7 @@ Design notes
 * Indexes are declared for the exact predicates the API filters on, not
   speculatively; every index here is justified in the README.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations

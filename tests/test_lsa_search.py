@@ -1,6 +1,6 @@
 """Tests for GET /api/v1/lsas/search/ - including the N+1 regression guard.
 
-Author: Vansh Mehta <mehtavansh6626@gmail.com>
+Author: Anjali Solanki <anjalisolanki0104@gmail.com>
 """
 
 from __future__ import annotations
