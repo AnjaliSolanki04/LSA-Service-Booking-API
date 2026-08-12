@@ -56,8 +56,8 @@ $ pytest -q
 The project falls back to SQLite when no PostgreSQL credentials are present, so the suite runs on a clean machine with nothing installed but Python.
 
 ```bash
-git clone <your-repo-url>
-cd habot-lsa-booking-api
+git clone https://github.com/AnjaliSolanki04/LSA-Service-Booking-API.git
+cd LSA-Service-Booking-API
 
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
@@ -254,6 +254,18 @@ Note the **partial** unique constraint on `Booking`. It applies only to blocking
 ## 5. API specification
 
 Base URL: `/api/v1/`
+
+### A note on the two URL forms
+
+The brief names these endpoints two different ways: `/api/bookings/` and `/api/payments/webhook/` in the *Outcome* section, `/api/v1/bookings/` and `/api/v1/lsas/search/` in the *Expected To Do* section. Rather than guess, both resolve:
+
+| Versioned (canonical) | Unversioned alias |
+|---|---|
+| `POST /api/v1/bookings/` | `POST /api/bookings/` |
+| `GET /api/v1/bookings/` | `GET /api/bookings/` |
+| `POST /api/v1/payments/webhook/` | `POST /api/payments/webhook/` |
+
+The aliases are additional routes in `config/urls.py` pointing at the same view classes — no logic is duplicated, and both forms behave identically. `/api/v1/` is the canonical prefix: versioning the path is what lets a breaking change ship as `/api/v2/` while existing clients keep working. Because OpenAPI treats each path as distinct, both forms are listed separately in the Swagger UI.
 Interactive docs: `/api/docs/` (Swagger) · `/api/redoc/` (ReDoc) · `/api/schema/` (raw OpenAPI)
 
 ### `GET /api/v1/lsas/search/`
@@ -655,11 +667,12 @@ pytest -k "overlap or conflict" -v           # by keyword
 
 | File | Tests | Focus |
 |---|---|---|
-| `test_models.py` | 13 | Constraints, state machine, derived values |
-| `test_lsa_search.py` | 13 | Filtering, availability, **N+1 regression guard** |
-| `test_booking_api.py` | 26 | Validation, **all five overlap geometries**, pricing |
-| `test_payment_webhook.py` | 15 | Signature, transitions, replay, tampering |
-| `test_payment_gateway.py` | 13 | Retries, timeouts, malformed responses |
+| `test_models.py` | 14 | Constraints, state machine, derived values |
+| `test_lsa_search.py` | 12 | Filtering, availability, **N+1 regression guard** |
+| `test_booking_api.py` | 23 | Validation, **all five overlap geometries**, pricing |
+| `test_payment_webhook.py` | 14 | Signature, transitions, replay, tampering |
+| `test_payment_gateway.py` | 12 | Retries, timeouts, malformed responses |
+| **Total** | **75** | |
 
 Coverage across the three categories the brief names:
 
@@ -692,19 +705,21 @@ Tests run against a PostgreSQL service container, not SQLite, on a matrix of **P
 
 ## 11. Git workflow
 
+### Branching model
+
+The convention this project follows, and the one I would run on a team:
+
 ```
 main            production-ready; merges only via reviewed pull request
 └── develop     integration branch
-    ├── chore/normalise-line-endings
-    ├── docs/author-attribution
-    └── feat/unversioned-endpoint-aliases
+    └── feat/*  one branch per unit of work, merged with --no-ff
 ```
 
-Feature branches are cut from `develop`, merged back with `--no-ff` so each unit
-of work stays visible as a distinct merge commit in the history graph, and
-`develop` is promoted to `main` the same way.
+Feature branches are cut from `develop` and merged back with `--no-ff`, so each
+unit of work stays visible as a distinct merge commit rather than being flattened
+into the trunk. `develop` is promoted to `main` the same way.
 
-Conventional Commits throughout:
+Conventional Commits:
 
 ```
 feat(api): expose unversioned /api/bookings/ and /api/payments/webhook/ aliases
@@ -715,20 +730,29 @@ test(webhook): cover replay and signature-tampering cases
 ci: run test suite against PostgreSQL 16
 ```
 
+### What this repository actually shows
+
+Being straight about it, because the history is public and easily checked: this
+was built solo against a short deadline, and the work landed as a small number of
+commits on `main` rather than through the branch-and-pull-request cycle above.
+Nothing here was code-reviewed, because there was no second reviewer to do it.
+
+The branching model is what I practise on a team, not a claim about this
+repository's commit graph.
+
 ### Line-ending discipline
 
 `.gitattributes` pins `* text=auto eol=lf`. Without it, a Windows checkout
 rewrites every file with CRLF, and the next commit reports thousands of phantom
-changed lines that bury the real diff. Pinning the stored form means the
-repository reads identically regardless of the operating system a contributor
-uses.
+changed lines that bury the real diff. This is not hypothetical: before the file
+was added, a single commit from a Windows working tree showed 43 files and ~6,100
+changed lines, of which fewer than 50 were real. Pinning the stored form means
+the repository reads identically regardless of contributor operating system.
 
-### A note on scope
+### On a team
 
-This is a solo hiring project, so the "one approving review" half of a real
-branch-protection rule cannot be demonstrated — there is no second reviewer. On
-a team I would additionally enable branch protection on `main` requiring a green
-CI run and one approving review, with direct pushes disabled.
+Branch protection on `main`: a green CI run required, one approving review, no
+direct pushes.
 
 ---
 
@@ -751,7 +775,7 @@ Being explicit about scope boundaries, since this was a 4–6 hour brief:
 ## Project structure
 
 ```
-habot-lsa-booking-api/
+LSA-Service-Booking-API/
 ├── config/                          Django project
 │   ├── settings.py                  env-driven; Postgres with SQLite fallback
 │   ├── urls.py                      root routing + OpenAPI docs
